@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Penguin Species Classification — Case Study | Ariel Farzan</title>
+<style>
+  :root{
+    --navy:#16243F; --navy2:#1f3257; --slate:#5B6B85; --ink:#2A2F38;
+    --paper:#FBFAF7; --line:#E3DFD6; --brass:#B08D4C; --brass-soft:#C9AE7B;
+    --adelie:#2D6E9E; --chinstrap:#3C8A5B; --gentoo:#C0392B; --net:#6E4B8E;
+    --panel:#F3F0E9;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .page{
+    width:8.5in; height:11in; margin:0 auto; background:var(--paper);
+    padding:0; position:relative; overflow:hidden;
+  }
+  .page + .page{margin-top:28px;}
+  h1,h2,h3,.serif{font-family:Georgia,"Times New Roman",serif;}
+
+  /* ---------- MASTHEAD ---------- */
+  .masthead{
+    background:var(--navy); color:#fff; padding:26px 42px 22px;
+    position:relative; overflow:hidden;
+  }
+  .masthead::after{
+    content:""; position:absolute; top:0; right:0; bottom:0; width:46%;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 7px);
+    -webkit-mask:linear-gradient(90deg,transparent,#000);
+            mask:linear-gradient(90deg,transparent,#000);
+  }
+  .eyebrow{
+    font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--brass-soft); font-weight:600; margin-bottom:11px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{content:""; width:26px; height:1.5px; background:var(--brass);}
+  .masthead h1{
+    font-size:28px; line-height:1.12; font-weight:700; letter-spacing:-.01em;
+    max-width:82%; position:relative; z-index:2;
+  }
+  .masthead .lede{
+    margin-top:11px; font-size:12px; color:#C4CCD9; max-width:74%;
+    position:relative; z-index:2; line-height:1.5;
+  }
+  .byline{
+    margin-top:15px; padding-top:12px; border-top:1px solid rgba(255,255,255,.14);
+    display:flex; gap:28px; font-size:11px; color:#AAB4C4; position:relative; z-index:2;
+    flex-wrap:wrap;
+  }
+  .byline b{color:#fff; font-weight:600; display:block; font-size:12px; margin-bottom:1px;}
+  .byline .serif-name{font-family:Georgia,serif; font-size:13px; color:#fff;}
+
+  /* ---------- BODY ---------- */
+  .body{padding:24px 42px 28px;}
+  .section-label{
+    font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--brass); font-weight:700; margin-bottom:8px;
+    display:flex; align-items:center; gap:9px;
+  }
+  .section-label .num{
+    font-family:Georgia,serif; font-style:italic; color:var(--slate);
+    font-size:12px; letter-spacing:0;
+  }
+  .sec-title{
+    font-size:19px; color:var(--navy); font-weight:700; margin-bottom:9px;
+    letter-spacing:-.01em;
+  }
+  p.prose{font-size:12px; color:#3a4049; line-height:1.62;}
+  .rule{height:1px; background:var(--line); margin:18px 0;}
+
+  /* ---------- CLIENT BRIEF CARD ---------- */
+  .brief{
+    display:grid; grid-template-columns:1.55fr 1fr; gap:0;
+    border:1px solid var(--line); border-radius:7px; overflow:hidden;
+    margin-top:4px;
+  }
+  .brief-main{padding:20px 22px; background:#fff;}
+  .brief-side{padding:20px 22px; background:var(--navy); color:#fff;}
+  .brief-main .sec-title{margin-bottom:7px;}
+  .exposure-grid{display:flex; gap:8px; margin-top:15px;}
+  .exp-chip{
+    flex:1; border:1px solid var(--line); border-radius:6px; padding:11px 10px;
+    text-align:center; background:var(--paper);
+  }
+  .exp-chip .city{font-size:11px; font-weight:700; color:var(--navy); margin-bottom:3px;}
+  .exp-chip .peril{font-size:8.5px; letter-spacing:.04em; color:var(--slate); text-transform:uppercase;}
+  .exp-chip .dot{width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:4px;}
+  .brief-side .side-h{
+    font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--brass-soft); font-weight:700; margin-bottom:13px;
+  }
+  .objrow{margin-bottom:14px;}
+  .objrow:last-child{margin-bottom:0;}
+  .objrow .who{font-size:11.5px; font-weight:700; color:#fff; font-family:Georgia,serif;}
+  .objrow .want{font-size:10.5px; color:#B9C2D1; line-height:1.45; margin-top:2px;}
+
+  /* ---------- METHOD SPINE ---------- */
+  .spine{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:6px;}
+  .step{
+    border:1px solid var(--line); border-radius:7px; padding:17px 16px 16px;
+    background:#fff; position:relative;
+  }
+  .step .st-num{
+    font-family:Georgia,serif; font-size:13px; color:var(--brass); font-weight:700;
+    font-style:italic; margin-bottom:8px;
+  }
+  .step h3{font-size:13px; color:var(--navy); margin-bottom:7px; line-height:1.25;}
+  .step p{font-size:10.5px; color:#4a515b; line-height:1.55;}
+  .step .tag{
+    margin-top:11px; display:inline-block; font-size:9px; letter-spacing:.05em;
+    background:var(--panel); color:var(--slate); padding:3px 8px; border-radius:4px;
+    font-weight:600; text-transform:uppercase;
+  }
+  .step .tag.win{background:#EAF3EC; color:#2f6b45;}
+
+  /* ---------- EXHIBIT ---------- */
+  .exhibit-wrap{margin-top:6px; border:1px solid var(--line); border-radius:7px; padding:16px; background:#fff;}
+  .exhibit-wrap img{width:100%; display:block; border-radius:3px;}
+  .exhibit-cap{font-size:10px; color:var(--slate); margin-top:11px; line-height:1.5; padding-left:12px; border-left:2px solid var(--brass);}
+
+  /* ---------- STAT STRIP ---------- */
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:0; border:1px solid var(--navy); border-radius:7px; overflow:hidden; margin-top:6px;}
+  .stat{padding:18px 16px; text-align:center; border-right:1px solid rgba(255,255,255,.13); background:var(--navy); color:#fff;}
+  .stat:last-child{border-right:none;}
+  .stat .v{font-family:Georgia,serif; font-size:25px; font-weight:700; color:#fff; line-height:1;}
+  .stat .v small{font-size:14px; color:var(--brass-soft);}
+  .stat .l{font-size:9px; letter-spacing:.07em; text-transform:uppercase; color:#A7B1C1; margin-top:8px; line-height:1.4;}
+
+  /* ---------- SIGNATURE: stakeholder resolution ---------- */
+  .resolve{border:1px solid var(--line); border-radius:7px; overflow:hidden; margin-top:6px; background:#fff;}
+  .resolve-head{background:var(--panel); padding:13px 20px; border-bottom:1px solid var(--line);}
+  .resolve-head .t{font-family:Georgia,serif; font-size:14px; color:var(--navy); font-weight:700;}
+  .resolve-head .s{font-size:10.5px; color:var(--slate); margin-top:2px;}
+  .resolve-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:0;}
+  .pcol{padding:16px 18px; border-right:1px solid var(--line);}
+  .pcol:last-child{border-right:none;}
+  .pcol .pwho{font-size:10px; letter-spacing:.1em; text-transform:uppercase; font-weight:700; color:var(--slate); margin-bottom:6px;}
+  .pcol .ppick{font-family:Georgia,serif; font-size:15px; color:var(--navy); font-weight:700; margin-bottom:5px;}
+  .pcol .pwhy{font-size:10px; color:#555d68; line-height:1.5;}
+  .verdict{background:var(--navy); color:#fff; padding:15px 20px; display:flex; gap:16px; align-items:flex-start;}
+  .verdict .vk{font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass-soft); font-weight:700; white-space:nowrap; padding-top:2px;}
+  .verdict .vt{font-size:11.5px; color:#DCE2EC; line-height:1.55;}
+  .verdict .vt b{color:#fff;}
+
+  /* ---------- METHODS TABLE ---------- */
+  .mtable{width:100%; border-collapse:collapse; margin-top:6px; font-size:11px;}
+  .mtable th{background:var(--navy); color:#fff; text-align:left; padding:9px 13px; font-weight:600; font-size:10px; letter-spacing:.04em;}
+  .mtable th.r,.mtable td.r{text-align:right;}
+  .mtable td{padding:8px 13px; border-bottom:1px solid var(--line); color:#3a4049;}
+  .mtable tr:nth-child(even) td{background:var(--panel);}
+  .mtable .best{color:#2f6b45; font-weight:700;}
+  .mono{font-family:"SF Mono",Menlo,Consolas,monospace; font-size:10.5px;}
+
+  /* ---------- FOOTER ---------- */
+  .foot{
+    background:var(--navy); color:#fff; padding:22px 42px;
+    display:flex; justify-content:space-between; align-items:center; gap:20px;
+  }
+  .foot .fl{font-size:11px; color:#AEB8C7; line-height:1.55; max-width:62%;}
+  .foot .fl b{color:#fff; font-family:Georgia,serif;}
+  .foot .fr{text-align:right;}
+  .foot .fr .nm{font-family:Georgia,serif; font-size:15px; color:#fff; font-weight:700;}
+  .foot .fr .ct{font-size:10.5px; color:var(--brass-soft); margin-top:3px;}
+
+  .two{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  .insight{
+    background:linear-gradient(180deg,#fff,var(--panel));
+    border:1px solid var(--line); border-left:3px solid var(--brass);
+    border-radius:6px; padding:17px 19px; margin-top:18px;
+  }
+  .insight .ih{font-size:10px; letter-spacing:.13em; text-transform:uppercase; color:var(--brass); font-weight:700; margin-bottom:7px;}
+  .insight p{font-size:12px; color:#363c45; line-height:1.6;}
+  .insight p b{color:var(--navy);}
+
+  @media print{
+    body{background:#fff;}
+    .page{margin:0; box-shadow:none; page-break-after:always;}
+    .page:last-child{page-break-after:auto;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1 ============ -->
+<div class="page">
+  <div class="masthead">
+    <div class="eyebrow">Machine Learning · Case Study</div>
+    <h1>Beating the Ceiling: When Linear Models Stop Improving</h1>
+    <p class="lede">Three standard classifiers plateaued at 97% on a deliberately starved feature set.
+    A neural network written from scratch in NumPy found the 3% they couldn't.</p>
+    <div class="byline">
+      <div><span class="serif-name">Ariel Farzan</span><br><span style="font-size:10px;color:#9aa4b4;">Mathematics&ndash;Economics, UCLA</span></div>
+      <div><b>Discipline</b>Supervised Learning &amp; Classification</div>
+      <div><b>Toolkit</b>Python &middot; pandas &middot; scikit-learn &middot; NumPy</div>
+      <div><b>Origin</b>PIC 16A Final Project &middot; Team of 3</div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- BRIEF -->
+    <div class="section-label"><span class="num">i.</span>The Problem</div>
+    <div class="brief">
+      <div class="brief-main">
+        <div class="sec-title">Three species, and only three features to tell them apart</div>
+        <p class="prose">The Palmer Penguins dataset records 344 birds across three species and seventeen
+        columns. The assignment imposed a hard constraint: classify species using <b>at most two numeric
+        features and one categorical feature</b>. Most of the data had to be thrown away. The real question
+        wasn't whether classification was possible &mdash; it was <b>how much signal survives</b> when you
+        are forced to choose almost nothing, and what kind of model extracts the last of it.</p>
+        <div class="exposure-grid">
+          <div class="exp-chip"><div class="city">Adelie</div><div class="peril"><span class="dot" style="background:var(--adelie)"></span>152 birds</div></div>
+          <div class="exp-chip"><div class="city">Chinstrap</div><div class="peril"><span class="dot" style="background:var(--chinstrap)"></span>68 birds</div></div>
+          <div class="exp-chip"><div class="city">Gentoo</div><div class="peril"><span class="dot" style="background:var(--gentoo)"></span>124 birds</div></div>
+        </div>
+      </div>
+      <div class="brief-side">
+        <div class="side-h">Design Constraints</div>
+        <div class="objrow"><div class="who">Two numeric features</div><div class="want">From six candidates &mdash; chosen on evidence, not intuition.</div></div>
+        <div class="objrow"><div class="who">One categorical feature</div><div class="want">Island, sex, or clutch completion. Only one gets in.</div></div>
+        <div class="objrow"><div class="who">No leakage</div><div class="want">Test data must never inform a cleaning or encoding decision.</div></div>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- METHOD -->
+    <div class="section-label"><span class="num">ii.</span>The Method</div>
+    <div class="sec-title">Choose the features on evidence, then let the models argue</div>
+    <p class="prose" style="margin-bottom:18px;">Feature selection came first and was decided by correlation
+    ranking and visual separability &mdash; not by guessing. Only then did model comparison begin.</p>
+    <div class="spine">
+      <div class="step">
+        <div class="st-num">01</div>
+        <h3>Clean without contaminating</h3>
+        <p>Audited missingness column by column, dropped constant and identifier fields, and deliberately
+        deferred NaN removal until after feature selection &mdash; so rows were never discarded over columns
+        that would go unused.</p>
+        <span class="tag">Split before clean &middot; no leakage</span>
+      </div>
+      <div class="step">
+        <div class="st-num">02</div>
+        <h3>Rank, then look</h3>
+        <p>Ranked every feature by absolute correlation with species, then inspected pairwise scatter plots
+        and model decision regions to find the combination with the least class overlap.</p>
+        <span class="tag win">Culmen Length &middot; Culmen Depth &middot; Island</span>
+      </div>
+      <div class="step">
+        <div class="st-num">03</div>
+        <h3>Compare under cross-validation</h3>
+        <p>Evaluated logistic regression, linear SVM, and LDA under k-fold cross-validation with per-fold
+        confusion matrices, plus repeated random splits to confirm the accuracy was stable rather than lucky.</p>
+        <span class="tag">k-fold CV &middot; confusion matrices</span>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- INSIGHT: the island finding -->
+    <div class="section-label"><span class="num">iii.</span>The Finding That Shaped Everything</div>
+    <div class="sec-title">Why geography outperformed biology</div>
+    <div class="two">
+      <p class="prose">Island correlated with species at <b>0.64</b> &mdash; higher than most physical
+      measurements. That looked strange until the grouped counts explained it: <b>Gentoo appear only on
+      Biscoe, and Chinstrap only on Dream</b>. Island isn't describing the bird; it is encoding where the
+      species live, which makes it nearly a free label for two of three classes.</p>
+      <p class="prose">This is the kind of feature that flatters a model on a clean academic dataset and
+      betrays it in the field &mdash; it would generalize to no other archipelago. Keeping it was correct
+      under the assignment's constraint, but the reason it works is a fact about sampling, not about
+      penguins. Naming that distinction mattered more than the accuracy score.</p>
+    </div>
+
+    <div class="insight">
+      <div class="ih">Where the linear models broke</div>
+      <p>Logistic regression, SVM, and LDA all cut the feature space with <b>straight boundaries</b>, and all
+      three stalled around 97%. The confusion matrices showed the same failure every time: a small cluster of
+      <b>Adelie and Chinstrap birds overlapping in culmen space</b>. No straight line separates them.
+      The remaining error wasn't noise &mdash; it was <b>the shape of the boundary</b>.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ PAGE 2 ============ -->
+<div class="page">
+  <div class="body" style="padding-top:38px;">
+
+    <!-- STATS -->
+    <div class="section-label"><span class="num">iv.</span>The Numbers</div>
+    <div class="stats">
+      <div class="stat"><div class="v">3<small>+1</small></div><div class="l">Models compared, one built from scratch</div></div>
+      <div class="stat"><div class="v">97<small>%</small></div><div class="l">Linear-model ceiling under CV</div></div>
+      <div class="stat"><div class="v">99<small>%</small></div><div class="l">Perceptron test accuracy</div></div>
+      <div class="stat"><div class="v">0</div><div class="l">Deep-learning frameworks used</div></div>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- MODEL RESOLUTION -->
+    <div class="section-label"><span class="num">v.</span>The Models</div>
+    <div class="sec-title">Four approaches to the same starved feature set</div>
+    <div class="resolve">
+      <div class="resolve-head">
+        <div class="t">Every linear model agreed &mdash; including on what it could not do</div>
+        <div class="s">Consistency across three different algorithms is evidence the limit was structural, not incidental.</div>
+      </div>
+      <div class="resolve-grid">
+        <div class="pcol">
+          <div class="pwho">Logistic Regression</div>
+          <div class="ppick">~97%</div>
+          <div class="pwhy">Stable across 10 folds and repeated random splits. Reliable, interpretable, and firmly capped.</div>
+        </div>
+        <div class="pcol">
+          <div class="pwho">Linear SVM</div>
+          <div class="ppick">~95%</div>
+          <div class="pwhy">Underperformed without hyperparameter tuning and threw convergence warnings &mdash; reported honestly rather than quietly dropped.</div>
+        </div>
+        <div class="pcol">
+          <div class="pwho">Discriminant Analysis</div>
+          <div class="ppick">~97&ndash;99%</div>
+          <div class="pwhy">The strongest linear result, with several folds reaching perfect accuracy. Still bounded by the same straight-line geometry.</div>
+        </div>
+      </div>
+      <div class="verdict">
+        <div class="vk">My Contribution</div>
+        <div class="vt">I built the fourth model: a <b>multi-layer perceptron implemented from scratch in NumPy</b> &mdash;
+        no scikit-learn, no PyTorch. Min&ndash;max scaling, a nine-neuron ReLU hidden layer, softmax output over three classes,
+        cross-entropy loss, and <b>manually derived backpropagation</b> with gradient descent. Because its decision boundaries
+        bend rather than cut, it resolved the overlapping Adelie&ndash;Chinstrap cases that every linear model missed, reaching
+        <b>~99% test accuracy with a clean confusion matrix</b>.</div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div style="margin-top:24px;"></div>
+    <div class="section-label"><span class="num">vi.</span>Model Comparison</div>
+    <div class="sec-title">The evidence behind the conclusion</div>
+    <table class="mtable">
+      <thead>
+        <tr><th>Model</th><th>Boundary</th><th>Validation</th><th class="r">Accuracy</th><th>Failure mode</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><b>Logistic Regression</b></td><td>Linear</td><td>10-fold CV + random splits</td><td class="r mono">~97%</td><td>Adelie/Chinstrap overlap</td></tr>
+        <tr><td><b>Linear SVM</b></td><td>Linear</td><td>10-fold CV</td><td class="r mono">~95%</td><td>Convergence, untuned C</td></tr>
+        <tr><td><b>Linear Discriminant Analysis</b></td><td>Linear</td><td>20-fold CV</td><td class="r mono">~97&ndash;99%</td><td>Same overlap, fewer cases</td></tr>
+        <tr><td><b>Perceptron (from scratch)</b></td><td>Non-linear</td><td>Held-out test set</td><td class="r mono best">~99%</td><td>&mdash;</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:9.5px;color:var(--slate);margin-top:8px;line-height:1.5;">
+      All models trained on the same three features (Culmen Length, Culmen Depth, Island). Accuracy ranges reflect
+      variation across folds and random seeds rather than a single favorable run. The perceptron's hyperparameters
+      &mdash; learning rate and epoch count &mdash; were selected by inspecting training-loss curves for convergence
+      and diminishing returns, not by grid search.</p>
+
+    <div class="insight">
+      <div class="ih">Why this is the part that matters</div>
+      <p>Reaching 99% was not the interesting outcome &mdash; <b>knowing why 97% was the ceiling was</b>. Three
+      independent algorithms failing at the same boundary, on the same handful of birds, is a diagnosis rather than
+      a disappointment: it says the remaining error is geometric, and that a curved boundary should recover it.
+      <b>Writing the network by hand instead of importing one meant the fix followed from the diagnosis</b> rather
+      than from swapping models until a number improved.</p>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <div class="fl"><b>Methodology, in brief.</b> pandas cleaning with leakage-aware train/test splitting; feature selection
+    by correlation ranking and decision-region inspection; scikit-learn logistic regression, SVM, and LDA evaluated under
+    k-fold cross-validation with confusion matrices; multi-layer perceptron implemented from scratch in NumPy with manual
+    backpropagation. Group project of three &mdash; cleaning, statistics, feature selection, and the evaluation function were
+    shared; the perceptron model and scatter-plot analysis were mine. Full notebook available on request.</div>
+    <div class="fr">
+      <div class="nm">Ariel Farzan</div>
+      <div class="ct">ArielFarzan@ucla.edu &middot; (213) 477-4750</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
